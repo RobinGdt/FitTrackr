@@ -1,3 +1,9 @@
 [submodule "sport-back"]
 	path = sport-back
 	url = https://github.com/Joeil92/sport-back.git
+[submodule "server"]
+	path = server
+	url = https://github.com/Joeil92/sport-back.git
+[submodule "backend"]
+	path = backend
+	url = https://github.com/Joeil92/sport-back.git
