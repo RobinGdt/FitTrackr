@@ -4,6 +4,9 @@ export interface Product {
 }
 
 export interface User {
+  phone: string;
+  firstname: string;
+  id?: string;
   email: string;
   password: string;
 }

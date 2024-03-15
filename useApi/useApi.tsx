@@ -1,5 +1,7 @@
 import { useCallback } from "react";
 import { User } from "./interface.type";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import JWT from "expo-jwt";
 
 export interface useApiResult {
   addNewUser: (
@@ -12,7 +14,12 @@ export interface useApiResult {
     size: number
   ) => Promise<User>;
   logInUser: (email: string, password: string) => Promise<User>;
-  fetchUser: (email: string, phone: string, firstname: string) => Promise<User>;
+  fetchUser: (
+    email: string,
+    phone: string,
+    firstname: string,
+    id?: string
+  ) => Promise<User>;
 }
 export const useApi = (): useApiResult => {
   const addNewUser: useApiResult["addNewUser"] = useCallback(
@@ -76,6 +83,10 @@ export const useApi = (): useApiResult => {
         }
 
         const data = await response.json();
+
+        const token = JWT.encode({ email: data.email }, "fjqfkljvdnklke12");
+
+        await AsyncStorage.setItem("userToken", token);
         return data;
       } catch (error) {
         console.error("Échec de la connexion :", error);
@@ -86,19 +97,14 @@ export const useApi = (): useApiResult => {
   );
 
   const fetchUser: useApiResult["fetchUser"] = useCallback(
-    async (email: string, phone: string, firstname: string) => {
+    async (id: string) => {
       try {
-        const url = "http://192.168.1.176:8000/";
+        const url = `http://192.168.1.176:8000/api/users/${id}`;
         const requestOptions = {
-          method: "POST",
+          method: "GET",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            email: email,
-            phone: phone,
-            firstname: firstname,
-          }),
         };
         const response = await fetch(url, requestOptions);
 
