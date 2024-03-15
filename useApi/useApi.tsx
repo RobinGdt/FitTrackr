@@ -1,53 +1,126 @@
-import axios from "axios";
 import { useCallback } from "react";
+import { User } from "./interface.type";
 
-interface useApiResult {
-  getProductInfo: (barcode: string) => Promise<any>;
-  searchProducts: (searchTerm: string) => Promise<Product[]>;
+export interface useApiResult {
+  addNewUser: (
+    email: string,
+    password: string,
+    firstname: string,
+    lastname: string,
+    phone: string,
+    weight: number,
+    size: number
+  ) => Promise<User>;
+  logInUser: (email: string, password: string) => Promise<User>;
+  fetchUser: (email: string, phone: string, firstname: string) => Promise<User>;
 }
-
-interface Product {
-  product_name: string;
-  categories: string;
-}
-
 export const useApi = (): useApiResult => {
-  const getProductInfo = useCallback(async (barcode: string) => {
-    try {
-      const response = await axios.get(
-        `https://world.openfoodfacts.org/api/v0/product/${barcode}.json`
-      );
-      return response.data;
-    } catch (error) {
-      console.error("Error fetching product information:", error);
-      return null;
-    }
-  }, []);
+  const addNewUser: useApiResult["addNewUser"] = useCallback(
+    async (
+      email: string,
+      password: string,
+      firstname: string,
+      lastname: string,
+      phone: string,
+      weight: number,
+      size: number
+    ) => {
+      try {
+        const url = "http://192.168.1.176:8000/api/users";
+        const requestOptions = {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: email,
+            password: password,
+            firstname: firstname,
+            lastname: lastname,
+            phone: phone,
+            weight: weight,
+            size: size,
+          }),
+        };
+        const response = await fetch(url, requestOptions);
+        const data = await response.json();
+        console.log("User created: ", data);
+        return data;
+      } catch (error) {
+        throw error;
+      }
+    },
+    []
+  );
 
-  const searchProducts = async (searchTerm: string): Promise<Product[]> => {
-    try {
-      const url = `https://world.openfoodfacts.org/cgi/search.pl?action=process&tagtype_0=product_name&tag_contains_0=contains&tag_0=${encodeURIComponent(
-        searchTerm
-      )}&page_size=20&json=true`;
+  const logInUser: useApiResult["logInUser"] = useCallback(
+    async (email: string, password: string) => {
+      try {
+        const url = "http://192.168.1.176:8000/auth";
+        const requestOptions = {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: email,
+            password: password,
+          }),
+        };
+        const response = await fetch(url, requestOptions);
 
-      const response = await axios.get(url);
+        if (!response.ok) {
+          const error = new Error(`Erreur HTTP ! Statut : ${response.status}`);
+          (error as any).status = response.status;
+          throw error;
+        }
 
-      const products: Product[] = response.data.products.map(
-        (product: any) => ({
-          product_name: product.product_name,
-          categories: product.categories,
-        })
-      );
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.error("Échec de la connexion :", error);
+        throw error;
+      }
+    },
+    []
+  );
 
-      return products;
-    } catch (error) {
-      console.error("Error searching products:", error);
-      return [];
-    }
-  };
+  const fetchUser: useApiResult["fetchUser"] = useCallback(
+    async (email: string, phone: string, firstname: string) => {
+      try {
+        const url = "http://192.168.1.176:8000/";
+        const requestOptions = {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: email,
+            phone: phone,
+            firstname: firstname,
+          }),
+        };
+        const response = await fetch(url, requestOptions);
+
+        if (!response.ok) {
+          const error = new Error(`Erreur HTTP ! Statut : ${response.status}`);
+          (error as any).status = response.status;
+          throw error;
+        }
+
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.error("Échec de la connexion :", error);
+        throw error;
+      }
+    },
+    []
+  );
 
   return {
-    getProductInfo,
-    searchProducts,
+    addNewUser,
+    logInUser,
+    fetchUser,
   };
 };
