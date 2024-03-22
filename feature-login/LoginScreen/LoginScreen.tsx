@@ -3,9 +3,8 @@ import {
   SafeAreaView,
   Text,
   Button,
-  ActivityIndicator,
+  // ActivityIndicator,
   View,
-  Pressable,
 } from "react-native";
 import { LogInProps } from "../screen.types";
 import { useState } from "react";

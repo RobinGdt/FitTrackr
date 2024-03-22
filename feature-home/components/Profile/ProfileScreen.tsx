@@ -1,31 +1,81 @@
-import { StyleSheet, SafeAreaView, Text, Button } from "react-native";
+import {
+  StyleSheet,
+  SafeAreaView,
+  Text,
+  Button,
+  View,
+  Image,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useUser } from "../../../data-access/userContext";
-import { useEffect } from "react";
+import * as ImagePicker from "expo-image-picker";
+import BaseButton from "../../ui-components/BaseButton/BaseButton";
 
 const ProfileScreen = (): JSX.Element => {
   const navigation = useNavigation();
-  const { email, phone, getUser, getUserInfoFromToken } = useUser();
+  const { email, imageUrl, weigth, firstname, logOut, setImageUrl } = useUser();
 
-  const onNavBack = () => {
-    navigation.goBack();
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+    console.log("img", result);
+
+    if (!result.canceled && result.assets.length > 0) {
+      setImageUrl(result.assets[0].uri);
+    }
   };
-
-  useEffect(() => {
-    getUserInfoFromToken();
-  }, []);
-
-  useEffect(() => {
-    // Au chargement du composant, fetch les données utilisateur
-    getUser();
-  }, []);
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <Text>{email}</Text>
-      <Text>{phone}</Text>
-      <Button title="Refresh User Data" onPress={getUser} />
-      <Button title="Go Back" onPress={onNavBack} />
+      <View style={styles.userInfosContainer}>
+        <View
+          style={{
+            width: 200,
+            height: 200,
+            borderRadius: 100,
+            backgroundColor: imageUrl ? "" : "grey",
+            justifyContent: "flex-end",
+            marginBottom: 20,
+          }}
+        >
+          {imageUrl ? (
+            <Image
+              source={{ uri: imageUrl }}
+              style={{ width: 200, height: 200, borderRadius: 100 }}
+            />
+          ) : (
+            <BaseButton title="Add profile picture" onPress={pickImage} />
+          )}
+        </View>
+
+        <Text style={styles.title}>{firstname}</Text>
+        <Text style={styles.subtitle}>{email}</Text>
+      </View>
+      <View style={styles.circleWrapper}>
+        <View style={styles.circleContainer}>
+          <View style={styles.circle}>
+            <Text style={styles.icon}>🐋</Text>
+          </View>
+          <Text style={{ fontWeight: "700" }}>{weigth} kg</Text>
+        </View>
+        <View style={styles.circle}>
+          <Text style={styles.icon}>🔥</Text>
+        </View>
+        <View style={styles.circle}>
+          <Text style={styles.icon}>💪🏻</Text>
+        </View>
+      </View>
+      <Button
+        title="Log Out"
+        onPress={() => {
+          logOut();
+          navigation.navigate("LogIn" as never);
+        }}
+      />
     </SafeAreaView>
   );
 };
@@ -33,13 +83,41 @@ const ProfileScreen = (): JSX.Element => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
     backgroundColor: "#FFFF",
     width: "100%",
+    gap: 60,
+  },
+  userInfosContainer: {
+    paddingTop: 40,
+    width: "100%",
+    alignItems: "center",
   },
   title: {
-    fontSize: 30,
+    fontSize: 40,
+    fontWeight: "600",
+  },
+  circleWrapper: {
+    flexDirection: "row",
+    justifyContent: "space-evenly",
+  },
+  circleContainer: {
+    gap: 12,
+  },
+  icon: {
+    fontSize: 20,
+  },
+  subtitle: {
+    fontSize: 25,
+    fontWeight: "200",
+    letterSpacing: 1,
+  },
+  circle: {
+    width: 40,
+    height: 40,
+    backgroundColor: "lightblue",
+    borderRadius: 100,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
 

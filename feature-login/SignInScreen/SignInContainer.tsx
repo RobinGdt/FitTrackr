@@ -21,7 +21,8 @@ const SignInContainer = () => {
       data.lastname,
       data.phone,
       data.weight,
-      data.size
+      data.size,
+      data.imgUrl
     );
     setIsCreated(true);
     setLoading(false);

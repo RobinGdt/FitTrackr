@@ -5,11 +5,14 @@ import {
   Button,
   ActivityIndicator,
   View,
+  Image,
   Pressable,
 } from "react-native";
 import { SignInProps } from "../screen.types";
 import { useState } from "react";
 import BaseInput from "../../feature-home/ui-components/Input/Input";
+import * as ImagePicker from "expo-image-picker";
+import BaseButton from "../../feature-home/ui-components/BaseButton/BaseButton";
 
 const SignInScreen = ({
   onSubmit,
@@ -24,6 +27,7 @@ const SignInScreen = ({
     confirmPassword: "",
     firstname: "",
     lastname: "",
+    imgUrl: "",
     weight: 0,
     size: 0,
   });
@@ -35,6 +39,24 @@ const SignInScreen = ({
 
   const handlePrevStep = () => {
     setStep(step - 1);
+  };
+
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+    console.log("img", result);
+
+    if (!result.canceled && result.assets.length > 0) {
+      setData({ ...data, imgUrl: result.assets[0].uri });
+    }
+  };
+
+  const deleteImage = () => {
+    setData({ ...data, imgUrl: "" });
   };
 
   return (
@@ -49,7 +71,6 @@ const SignInScreen = ({
             ) : (
               <>
                 <Text style={styles.title}>Registration</Text>
-                {/* Afficher les champs en fonction de l'étape */}
                 {step === 1 && (
                   <View style={styles.container}>
                     <BaseInput
@@ -108,6 +129,38 @@ const SignInScreen = ({
                       }
                       placeholder="Size"
                     />
+                    <View
+                      style={{
+                        flex: 1,
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <BaseButton
+                        title="Pick an image from camera roll"
+                        onPress={pickImage}
+                      />
+                      {data.imgUrl && (
+                        <Image
+                          source={{ uri: data.imgUrl }}
+                          style={{ width: 200, height: 200 }}
+                        />
+                      )}
+                    </View>
+                    <View style={styles.imagesButtonWrapper}>
+                      <BaseButton title="Delete" onPress={deleteImage} />
+                      <BaseButton title="Edit" onPress={pickImage} />
+                    </View>
+                    <BaseButton
+                      title="Confirm"
+                      onPress={() => {
+                        if (data.password !== data.confirmPassword) {
+                          console.log("Passwords do not match");
+                          return;
+                        }
+                        onSubmit(data);
+                      }}
+                    />
                   </View>
                 )}
                 <View style={styles.stepWrapper}>
@@ -122,18 +175,6 @@ const SignInScreen = ({
                     </Pressable>
                   )}
                 </View>
-                {step === 3 && (
-                  <Button
-                    title="Confirm"
-                    onPress={() => {
-                      if (data.password !== data.confirmPassword) {
-                        console.log("Passwords do not match");
-                        return;
-                      }
-                      onSubmit(data);
-                    }}
-                  />
-                )}
               </>
             )}
           </>
@@ -154,10 +195,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 20,
   },
+  imagesButtonWrapper: {
+    flexDirection: "row",
+    width: "100%",
+    justifyContent: "space-evenly",
+  },
   container: {
     width: 350,
     justifyContent: "space-evenly",
-    height: 350,
+    height: 600,
     borderRadius: 20,
     padding: 40,
     backgroundColor: "#ecf0f3",
@@ -169,6 +215,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 1,
     shadowRadius: 20,
     elevation: 20,
+    gap: 20,
   },
   stepWrapper: {
     flexDirection: "row",

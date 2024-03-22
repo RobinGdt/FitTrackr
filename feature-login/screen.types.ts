@@ -23,6 +23,7 @@ export type SignInFormValues = {
   phone: string;
   weight: number;
   size: number;
+  imgUrl: string;
 };
 
 export type LogInFormValues = {

@@ -6,7 +6,7 @@ import BottomTabNavigator from "./navigators/BottonTabNavigator";
 import LoginContainer from "./feature-login/LoginScreen/LoginContainer";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import SignInContainer from "./feature-login/SignInScreen/SignInContainer";
-import { UserProvider } from "./data-access/userContext";
+import { UserProvider, useUser } from "./data-access/userContext";
 
 const Stack = createNativeStackNavigator();
 

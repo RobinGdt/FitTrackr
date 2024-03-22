@@ -8,14 +8,19 @@ import React, {
 } from "react";
 import { useApi, useApiResult } from "../useApi/useApi";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import JWT from "expo-jwt";
+import { decode as base64Decode } from "base-64";
+import * as Updates from "expo-updates";
 
 interface UserContextProps {
   id?: string;
   email: string;
   firstname: string;
+  imageUrl?: string;
+  weigth?: string;
   phone: string;
-  getUser: () => void;
+  setImageUrl: React.Dispatch<React.SetStateAction<string | undefined>>;
+  getUser: () => Promise<void>;
+  logOut: () => void;
   fetchUser: useApiResult["fetchUser"];
   getUserInfoFromToken: () => Promise<void>;
 }
@@ -29,32 +34,38 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
 
   const [id, setId] = useState<string | undefined>(undefined);
   const [email, setEmail] = useState("");
+  const [weigth, setWeigth] = useState("");
   const [firstname, setFirstname] = useState("");
   const [phone, setPhone] = useState("");
+  const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
 
   // GET USER INFO FROM TOKEN
 
   const getUserInfoFromToken = useCallback(async () => {
     try {
       const token = await AsyncStorage.getItem("userToken");
-      console.log(token);
       if (token) {
-        const key = "fjqfkljvdnklke12";
-        const decodedToken: any = JWT.decode(token, key);
+        console.log("TOKEN: ", token);
+        const tokenParts = token.split(".");
+        if (tokenParts.length === 3) {
+          const [, payloadBase64] = tokenParts;
+          const decodedPayload = base64Decode(payloadBase64);
+          const decodedToken = JSON.parse(decodedPayload);
+          const email = decodedToken.email;
+          const id = decodedToken.id;
 
-        const email = decodedToken.email;
+          console.log("Decoded Token:", decodedToken);
 
-        setEmail(email);
-
-        console.log("email:", email);
+          setEmail(email);
+          setId(id);
+        } else {
+          console.error("invalide token.");
+        }
       } else {
-        console.error("Le token est vide.");
+        console.error("Empty token.");
       }
     } catch (error) {
-      console.error(
-        "Erreur lors de la récupération des informations de l'utilisateur à partir du token :",
-        error
-      );
+      console.error("Fetch token error :", error);
       throw error;
     }
   }, []);
@@ -63,22 +74,46 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
   const getUser = useCallback(async () => {
     try {
       if (id === undefined) {
-        console.error("L'ID de l'utilisateur est indéfini.");
+        console.error("User ID undefined.");
         return;
       }
 
-      const userData = await fetchUser(email, firstname, phone, id);
-      console.log("Données de l'utilisateur :", userData);
-
-      setPhone(userData.phone);
-      setFirstname(userData.firstname);
-    } catch (error) {
-      console.error(
-        "Erreur lors de la récupération des données de l'utilisateur :",
-        error
+      const userData = await fetchUser(
+        email,
+        phone,
+        firstname,
+        id,
+        imageUrl,
+        weigth
       );
+      console.log("User data :", userData);
+      console.log("weight:", userData.weigth);
+
+      setFirstname(userData.firstname);
+      setImageUrl(userData.imageUrl);
+      setPhone(userData.phone);
+      setWeigth(userData.weigth);
+      setId(userData.id);
+    } catch (error) {
+      console.error("Fetch data error :", error);
     }
   }, [id, fetchUser]);
+
+  // LOG OUT
+  const logOut = async () => {
+    try {
+      await AsyncStorage.removeItem("userToken");
+      setId(undefined);
+      setEmail("");
+      setFirstname("");
+      setPhone("");
+      setImageUrl("");
+      setWeigth("");
+      await Updates.reloadAsync();
+    } catch (error) {
+      console.error("Erreur lors de la déconnexion :", error);
+    }
+  };
 
   return (
     <UserContext.Provider
@@ -87,7 +122,11 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         email,
         phone,
         firstname,
+        imageUrl,
+        weigth,
+        setImageUrl,
         getUser,
+        logOut,
         fetchUser,
         getUserInfoFromToken,
       }}

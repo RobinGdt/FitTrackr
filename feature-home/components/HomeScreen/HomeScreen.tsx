@@ -1,7 +1,24 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { StyleSheet, SafeAreaView, Text, View, ScrollView } from "react-native";
+import { useUser } from "../../../data-access/userContext";
+import BaseButton from "../../ui-components/BaseButton/BaseButton";
 
 const HomeScreen = (): JSX.Element => {
+  const { getUserInfoFromToken, getUser } = useUser();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        await getUserInfoFromToken();
+        await getUser();
+      } catch (error) {
+        console.error("Erreur de récupération des informations :", error);
+      }
+    };
+
+    fetchData();
+  }, [getUserInfoFromToken, getUser]);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView>
